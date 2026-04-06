@@ -43,3 +43,27 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Additional junk files
+analysis_output.txt
+analysis_output_utf8.txt
+analysis_utf8.txt
+analysis.txt
+analysis_errors.txt
+analysis_final.txt
+analysis_options.yaml.bak
+analyze_output.txt
+analyze_output_final.txt
+analyze_output_verification.txt
+build_log.txt
+build_output.txt
+build_output_*.txt
+flutter_analyze.log
+full_analyze.log
+log.txt
+log2.txt
+temp_google_response.html
+temp_google_response_new.html
+tmp.txt
+*.iml
+pubspec.lock
