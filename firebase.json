@@ -1,0 +1,71 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "hosting": [
+    {
+      "site": "bookhealth-lab-8bdcf",
+      "public": "bookhealth_lab_web/build/web",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    {
+      "site": "bookhealth-admin-8bdcf-portal",
+      "public": "bookhealth_admin_web/build/web",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "headers": [
+        {
+          "source": "/**",
+          "headers": [
+            {
+              "key": "X-Robots-Tag",
+              "value": "noindex"
+            }
+          ]
+        }
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    }
+  ],
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "bookhealth-8bdcf",
+          "appId": "1:193517349660:android:28236cc805fb1aea75e8d9",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "bookhealth-8bdcf",
+          "configurations": {
+            "android": "1:193517349660:android:28236cc805fb1aea75e8d9",
+            "ios": "1:193517349660:ios:e8a31768eb4e1d7d75e8d9",
+            "macos": "1:193517349660:ios:e8a31768eb4e1d7d75e8d9",
+            "web": "1:193517349660:web:719ed4e8432fc2cb75e8d9",
+            "windows": "1:193517349660:web:c18fa149d14d6b1e75e8d9"
+          }
+        }
+      }
+    }
+  }
+}
