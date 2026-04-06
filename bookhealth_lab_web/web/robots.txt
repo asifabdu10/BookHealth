@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bookhealth-lab-8bdcf.web.app/sitemap.xml

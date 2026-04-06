@@ -1,0 +1,574 @@
+﻿import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
+import '../widgets/glass_card.dart';
+import '../services/auth_service.dart';
+import '../services/database_helper.dart';
+import 'package:email_validator/email_validator.dart';
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server.dart';
+import 'dart:math';
+
+// --- Welcome Screen ---
+class WelcomeScreen extends StatelessWidget {
+  const WelcomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFB8C6DB), Color(0xFFF5E3E6), Color(0xFFD9E4F5)],
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: GlassCard(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.favorite,
+                    size: 60,
+                    color: Color.fromARGB(255, 255, 0, 0),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'BookHealth',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 104, 68, 68),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Your Health, Simplified',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Color.fromARGB(255, 103, 76, 76),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildBtn(
+                        context,
+                        'Login',
+                        [const Color(0xFFA1C4FD), const Color(0xFFC2E9FB)],
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 15),
+                      _buildBtn(
+                        context,
+                        'Join Us',
+                        [const Color(0xFFE2EBC8), const Color(0xFFE2EBC8)],
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CreateAccountPage(
+                                initialRole: 'patient',
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+                  ElevatedButton.icon(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const GoogleSignInPage(),
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.g_mobiledata,
+                      color: Colors.black,
+                      size: 28,
+                    ),
+                    label: const Text(
+                      'Continue with Google',
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.8),
+                      shape: const StadiumBorder(),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBtn(
+    BuildContext context,
+    String label,
+    List<Color> colors,
+    VoidCallback onPressed,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(colors: colors),
+      ),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// --- Login Page ---
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  void _login() async {
+    setState(() => _isLoading = true);
+    final authService = Provider.of<AuthService>(context, listen: false);
+    String? error = await authService.signIn(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
+    setState(() => _isLoading = false);
+
+    if (error != null) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error)));
+      }
+    }
+    if (error == null && mounted) {
+      Navigator.popUntil(context, (route) => route.isFirst);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFB8C6DB), Color(0xFFF5E3E6), Color(0xFFD9E4F5)],
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: GlassCard(
+              height: MediaQuery.of(context).size.height * 0.7,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.black87),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                  const Text(
+                    'Welcome Back',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 104, 68, 68),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _glassField(
+                    "Email",
+                    Icons.email,
+                    controller: _emailController,
+                  ),
+                  _glassField(
+                    "Password",
+                    Icons.lock,
+                    obscure: true,
+                    controller: _passwordController,
+                  ),
+                  const SizedBox(height: 20),
+                  _isLoading
+                      ? const CircularProgressIndicator(color: Colors.black54)
+                      : ElevatedButton(
+                          onPressed: _login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFA1C4FD),
+                            minimumSize: const Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Login',
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const CreateAccountPage(initialRole: 'patient'),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'Create Account',
+                      style: TextStyle(color: Color.fromARGB(255, 104, 68, 68)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _glassField(
+    String label,
+    IconData icon, {
+    bool obscure = false,
+    TextEditingController? controller,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextField(
+        controller: controller,
+        obscureText: obscure,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.white.withOpacity(0.1),
+          prefixIcon: Icon(icon, color: Color.fromARGB(255, 104, 68, 68)),
+          labelText: label,
+          labelStyle: const TextStyle(color: Color.fromARGB(255, 104, 68, 68)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: const BorderSide(color: Colors.white),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// --- Create Account Page ---
+class CreateAccountPage extends StatefulWidget {
+  final String initialRole;
+  const CreateAccountPage({
+    super.key,
+    this.initialRole = 'patient',
+  });
+
+  @override
+  State<CreateAccountPage> createState() => _CreateAccountPageState();
+}
+
+class _CreateAccountPageState extends State<CreateAccountPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+
+  String _generatedOtp = "";
+  bool _isLoading = false;
+
+  Future<bool> _sendOtpEmail() async {
+    _generatedOtp = (10000 + Random().nextInt(90000)).toString();
+    try {
+      String username = 'asifabdullapa@gmail.com';
+      String password = 'qlpbywayliyzjfrj';
+      final smtpServer = gmail(username, password);
+      
+      final message = Message()
+        ..from = Address(username, 'BookHealth Verification')
+        ..recipients.add(_emailController.text.trim())
+        ..subject = 'BookHealth - Your Verification OTP'
+        ..html = "<h3>Welcome to BookHealth!</h3>\n<p>Your one-time password is: <b>$_generatedOtp</b></p>\n<p>Please enter this code in the app to complete your account creation.</p>";
+
+      await send(message, smtpServer);
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error sending OTP via Mailer: $e");
+      }
+      return false;
+    }
+  }
+
+  void _signUp() async {
+    if (_isLoading) return;
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Passwords do not match")));
+      return;
+    }
+
+    if (_nameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _phoneController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill all details")),
+      );
+      return;
+    }
+
+    if (!EmailValidator.validate(_emailController.text.trim())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter a valid email address")),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    final String normalizedEmail = _emailController.text.trim().toLowerCase();
+
+    bool emailExists = await DatabaseHelper().checkEmailExists(normalizedEmail);
+    if (emailExists) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Account already exists with this email")),
+        );
+      }
+      return;
+    }
+
+    bool otpSent = await _sendOtpEmail();
+    if (mounted) setState(() => _isLoading = false);
+
+    if (otpSent && mounted) {
+      _showOTPDialog();
+    } else {
+      if (mounted) {
+        if (kDebugMode) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Using '12345' as bypass for dev mode.")),
+          );
+          _showOTPDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Failed to send OTP. Try again.")),
+          );
+        }
+      }
+    }
+  }
+
+  void _showOTPDialog() {
+    final _otpController = TextEditingController();
+    bool _isVerifying = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text("Verify Your Email"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("Enter OTP sent to ${_emailController.text}"),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: _otpController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(border: OutlineInputBorder()),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+                _isVerifying
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: () async {
+                        setDialogState(() => _isVerifying = true);
+                        if (_otpController.text == _generatedOtp || (kDebugMode && _otpController.text == "12345")) {
+                          Navigator.pop(context);
+                          _completeRegistration();
+                        } else {
+                          setDialogState(() => _isVerifying = false);
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Invalid OTP")));
+                        }
+                      },
+                      child: const Text("Verify"),
+                    ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _completeRegistration() async {
+    setState(() => _isLoading = true);
+    final authService = Provider.of<AuthService>(context, listen: false);
+    String? error = await authService.signUp(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      role: 'patient',
+      name: _nameController.text.trim(),
+      phone: _phoneController.text.trim(),
+    );
+    if (mounted) {
+      setState(() => _isLoading = false);
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      } else {
+        Navigator.pop(context);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFB8C6DB), Color(0xFFF5E3E6), Color(0xFFD9E4F5)],
+          ),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: GlassCard(
+              height: MediaQuery.of(context).size.height * 0.9,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.black87),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                    const Text(
+                      'Join Us',
+                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 104, 68, 68)),
+                    ),
+                    const SizedBox(height: 20),
+                    _glassField("Full Name", Icons.person, controller: _nameController),
+                    _glassField("Email", Icons.email, controller: _emailController),
+                    _glassField("Phone", Icons.phone, controller: _phoneController),
+                    _glassField("Password", Icons.lock, obscure: true, controller: _passwordController),
+                    _glassField("Confirm Password", Icons.lock_outline, obscure: true, controller: _confirmPasswordController),
+                    const SizedBox(height: 30),
+                    _isLoading
+                        ? const CircularProgressIndicator()
+                        : ElevatedButton(
+                            onPressed: _signUp,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFA1C4FD),
+                              minimumSize: const Size(double.infinity, 50),
+                            ),
+                            child: const Text('Sign Up', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _glassField(String label, IconData icon, {bool obscure = false, TextEditingController? controller}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextField(
+        controller: controller,
+        obscureText: obscure,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.white.withOpacity(0.1),
+          prefixIcon: Icon(icon, color: Color.fromARGB(255, 104, 68, 68)),
+          labelText: label,
+          labelStyle: const TextStyle(color: Color.fromARGB(255, 104, 68, 68)),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Colors.white12)),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Colors.white)),
+        ),
+      ),
+    );
+  }
+}
+
+// --- Google Sign In Page (Stub) ---
+class GoogleSignInPage extends StatelessWidget {
+  const GoogleSignInPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Google Sign-In")),
+      body: const Center(child: Text("Google logic integrated here.")),
+    );
+  }
+}

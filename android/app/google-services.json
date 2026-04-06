@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "193517349660",
+    "project_id": "bookhealth-8bdcf",
+    "storage_bucket": "bookhealth-8bdcf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:193517349660:android:28236cc805fb1aea75e8d9",
+        "android_client_info": {
+          "package_name": "com.example.bookhealth"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAoZIhXN7sOFqwx8aQtr-x7UKqtosFnlKE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

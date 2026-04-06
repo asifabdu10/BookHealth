@@ -1,0 +1,59 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // --- USER PROFILE RULES ---
+    match /users/{userId} {
+      // Allow anybody to create a new user doc (for signup/migration)
+      allow create: if true;
+      
+      // Allow unauthenticated lookup for legacy migration (lookup by email/password)
+      // AND allow authenticated users to read profiles
+      // IMPORTANT: Restrict 'if true' once all users are migrated!
+      allow read, list: if true; 
+      
+      // Allow users to update/delete their own profiles
+      allow update, delete: if request.auth != null && (
+        request.auth.uid == userId || 
+        request.auth.uid == resource.data.uid || 
+        request.auth.token.email == resource.data.email ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
+    // --- CENTER RULES ---
+    match /centers/{centerId} {
+      // Publicly readable so patients can see labs and admins can manage them
+      allow read, list: if true;
+      // Creation restricted to authenticated users (or anyone if you want public lab signup)
+      allow create: if true; 
+      // Update/Delete only by Admin or the associated Lab Tech
+      allow update, delete: if request.auth != null && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.centerId == centerId
+      );
+    }
+
+    // --- APPOINTMENT RULES ---
+    match /appointments/{appointmentId} {
+      // Admins can see everything
+      // Patients can see their own
+      // Lab Techs can see for their center
+      allow read, list: if request.auth != null && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        request.auth.uid == resource.data.patientId || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.centerId == resource.data.centerId
+      );
+      // Patients can create appointments
+      allow create: if request.auth != null;
+      // Patients and Labs can update status/details
+      allow update: if request.auth != null;
+    }
+
+    // Default: Deny all other access
+    match /{path=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
